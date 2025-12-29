@@ -55,6 +55,17 @@ const signinValidationSchema = z
   })
   .required();
 
+const updateUserDetails = z.object({
+  firstName: z
+    .string()
+    .max(50, "First name must be at most 50 characters long")
+    .optional(),
+  lastName: z
+    .string()
+    .max(50, "Last name must be at most 50 characters long")
+    .optional(),
+});
+
 const handleUserSignUp = asyncHandler(async (req, res) => {
   const { username, password, firstName, lastName } = req.body;
 
@@ -158,4 +169,75 @@ const handleUserSignIn = asyncHandler(async (req, res) => {
   });
 });
 
-export { handleUserSignUp, handleUserSignIn };
+const handleUpdateUserDetails = asyncHandler(async (req, res) => {
+  const { firstName, lastName } = req.body;
+
+  const { success, error } = updateUserDetails.safeParse({
+    firstName,
+    lastName,
+  });
+
+  if (!success) {
+    return res.status(400).json({
+      message: error.flatten().fieldErrors,
+    });
+  }
+
+  const user = await User.findById(req.user.sub);
+
+  if (!user) {
+    return res.json(404).json({
+      message: "User not found",
+    });
+  }
+
+  const updatedUser = await User.updateOne(
+    { _id: user._id },
+    { firstName, lastName }
+  );
+
+  if (updatedUser) {
+    return res.status(204).json({
+      message: "User updated successfully",
+    });
+  } else {
+    return res.status(500).json({
+      message: "Something went wrong, can't update user",
+    });
+  }
+});
+
+const getUsers = asyncHandler(async (req, res) => {
+  const filter = req.query.filter || "";
+
+  const users = await User.find({
+    $or: [
+      {
+        firstName: {
+          $regex: filter,
+        },
+      },
+      {
+        lastName: {
+          $regex: filter,
+        },
+      },
+    ],
+  });
+
+  return res.status(200).json({
+    users: users.map((user) => ({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+    })),
+  });
+});
+
+export {
+  handleUserSignUp,
+  handleUserSignIn,
+  handleUpdateUserDetails,
+  getUsers,
+};
