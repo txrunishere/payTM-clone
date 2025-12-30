@@ -4,6 +4,7 @@ import {
   handleUserSignUp,
   handleUpdateUserDetails,
   getUsers,
+  getUser,
 } from "../controllers/user.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 
@@ -14,5 +15,6 @@ router.route("/signin").post(handleUserSignIn);
 
 router.route("/").put(authMiddleware, handleUpdateUserDetails);
 router.route("/bulk").get(authMiddleware, getUsers);
+router.route("/").get(authMiddleware, getUser);
 
 export default router;

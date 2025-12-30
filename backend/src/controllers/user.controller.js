@@ -179,6 +179,25 @@ const handleUserSignIn = asyncHandler(async (req, res) => {
   });
 });
 
+const getUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.sub);
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    user: {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+    },
+  });
+});
+
 const handleUpdateUserDetails = asyncHandler(async (req, res) => {
   const { firstName, lastName } = req.body;
 
@@ -250,4 +269,5 @@ export {
   handleUserSignIn,
   handleUpdateUserDetails,
   getUsers,
+  getUser,
 };
