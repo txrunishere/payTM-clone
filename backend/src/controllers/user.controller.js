@@ -4,6 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config.js";
+import { Account } from "../db/account.schema.js";
 
 const signupValidationSchema = z
   .object({
@@ -105,7 +106,16 @@ const handleUserSignUp = asyncHandler(async (req, res) => {
   const { password: pass, resUser } = user;
   const userId = user._id;
 
-  const token = await jwt.sign(
+  const balance = (1 + Math.random() * 10000).toFixed(2);
+
+  const account = new Account({
+    user: userId,
+    balance: balance * 100,
+  });
+
+  await account.save();
+
+  const token = jwt.sign(
     { sub: userId, username: user.username },
     config.JWT_SECRET,
     {
