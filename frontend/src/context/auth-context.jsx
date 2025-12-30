@@ -29,7 +29,7 @@ export const AuthContextProvider = ({ children }) => {
         },
       });
 
-      if (resUser) {
+      if (resUser?.data) {
         setUser(resUser.data);
         setIsAuthenticated(true);
         return true;
