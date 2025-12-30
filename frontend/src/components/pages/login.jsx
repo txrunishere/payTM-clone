@@ -1,6 +1,58 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../../context/auth-context";
+import axios from "axios";
+import config from "../../lib/config";
 
 export const Login = () => {
+  const [user, setUser] = useState({
+    email: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
+  const { checkAuthUser } = useAuth();
+
+  const handleEmailChange = (e) => setUser({ ...user, email: e.target.value });
+  const handlePasswordChange = (e) =>
+    setUser({ ...user, password: e.target.value });
+
+  const handleUserLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (user.password && user.email) {
+        const res = await axios.post(
+          `${config.BACKEND_URL}/user/signin`,
+          {
+            username: user.email,
+            password: user.password,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (res?.data) {
+          localStorage.setItem("token", res.data?.jwt);
+          const isUser = await checkAuthUser();
+
+          if (isUser) {
+            navigate("/dashboard");
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setUser({
+        email: "",
+        password: "",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4 sm:px-6">
       <div className="w-full max-w-md bg-gray-900 rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-800">
@@ -12,28 +64,41 @@ export const Login = () => {
           Login to your account
         </p>
 
-        <form className="space-y-4">
+        <form onSubmit={handleUserLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
               Email
             </label>
             <input
               type="email"
               name="email"
               placeholder="john@example.com"
+              id="email"
+              autoComplete="email"
+              value={user.email}
+              onChange={handleEmailChange}
               required
               className="w-full px-3 py-2.5 text-sm sm:text-base bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
               Password
             </label>
             <input
               type="password"
               name="password"
               placeholder="••••••••"
+              value={user.password}
+              onChange={handlePasswordChange}
+              id="password"
               required
               className="w-full px-3 py-2.5 text-sm sm:text-base bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
