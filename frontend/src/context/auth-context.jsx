@@ -24,13 +24,24 @@ export const AuthContextProvider = ({ children }) => {
 
       const resUser = await axios.get(`${config.BACKEND_URL}/user`, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
         },
       });
 
+      const userAccount = await axios.get(
+        `${config.BACKEND_URL}/account/balance`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        }
+      );
+
       if (resUser?.data) {
-        setUser(resUser.data);
+        setUser({
+          ...resUser.data?.user,
+          balance: userAccount?.data.balance,
+        });
         setIsAuthenticated(true);
         return true;
       }
